@@ -1,0 +1,10 @@
+{
+    "makefile_sim": {
+        "destination": "sim",
+        "destination_name": "makefile"
+    },
+    "var_make": {
+        "destination": ".",
+        "destination_name": "var.make"
+    }
+}
