@@ -11,6 +11,7 @@
 import sys
 import json
 
+
 def get_json_var_from_object_file(json_file, var_name):
     """get the field 'var_name' from the json OBJECT file json_file (probably 
     won't work with a json array config file)
@@ -19,8 +20,8 @@ def get_json_var_from_object_file(json_file, var_name):
         d_data = json.load(f_in)
     return d_data[var_name]
 
-if __name__ == "__main__":
-    json_file =     sys.argv[1]
-    var_name =      sys.argv[2]
-    print(get_json_var_from_object_file(json_file, var_name))
 
+if __name__ == "__main__":
+    json_file = sys.argv[1]
+    var_name = sys.argv[2]
+    print(get_json_var_from_object_file(json_file, var_name))

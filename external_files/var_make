@@ -14,11 +14,12 @@ DIR_PRJ_TOP		:= $(abspath $(dir $(lastword ${MAKEFILE_LIST})))
 PRJ_NAME		:= $(notdir ${DIR_PRJ_TOP})
 
 DIR_SCRIPTS     := ${DIR_PRJ_TOP}/scripts
-DIR_SCRIPTS_XIL := ${DIR_PRJ_TOP}/scripts_xil
 DIR_SIM         := ${DIR_PRJ_TOP}/sim
 DIR_TB			:= ${DIR_PRJ_TOP}/tb
 DIR_RTL         := ${DIR_PRJ_TOP}/rtl
 DIR_XIPS        := ${DIR_PRJ_TOP}/xips
+
+SCRIPT_MANAGE_BUILDS	:= ${DIR_SCRIPTS}/manage_build_files.bash
 
 FILE_PROJECT_CONFIG	:= ${DIR_PRJ_TOP}/project_config.json
 FILE_READ_JSON_VAR	:= ${DIR_SCRIPTS}/get_json_variable.py

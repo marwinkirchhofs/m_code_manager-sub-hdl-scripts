@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-include ../_T_FILE_MAKE_VARIABLES_T_
+include ../var.make
 
 ############################################################
 # VARIABLES
