@@ -4,7 +4,11 @@
         "destination_name": "makefile"
     },
     "var_make": {
-        "destination": ".",
+        "destination": "",
         "destination_name": "var.make"
+    },
+    "project_config": {
+        "destination": "",
+        "destination_name": "project_config.json"
     }
 }

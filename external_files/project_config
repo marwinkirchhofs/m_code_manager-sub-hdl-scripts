@@ -1,0 +1,10 @@
+{
+    "project_type": "xilinx",
+    "part": "",
+    "board_part": "",
+    "top": null,
+    "sim_top": null,
+    "simulator": "xsim",
+    "hw_version": "latest",
+    "test": true
+}
