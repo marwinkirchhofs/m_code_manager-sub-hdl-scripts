@@ -5,6 +5,5 @@
     "top": null,
     "sim_top": null,
     "simulator": "xsim",
-    "hw_version": "latest",
-    "test": true
+    "hw_version": "latest"
 }
