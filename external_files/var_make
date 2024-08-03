@@ -4,7 +4,10 @@
 # All variables that are not globally needed are defined in the respective 
 # sub-makefiles
 
+##############################
 # DIRECTORY
+##############################
+
 # This makefile gets included by subdirectory makefiles. Thus, without providing
 # it with an absolute path any wildcard expansion would be executed relative
 # from the respective working directory. For globally providing a list of source
@@ -19,10 +22,25 @@ DIR_TB			:= ${DIR_PRJ_TOP}/tb
 DIR_RTL         := ${DIR_PRJ_TOP}/rtl
 DIR_XIPS        := ${DIR_PRJ_TOP}/xips
 
-SCRIPT_MANAGE_BUILDS	:= ${DIR_SCRIPTS}/manage_build_files.bash
+SCRIPT_MANAGE_BUILDS		:= ${DIR_SCRIPTS}/manage_build_files.bash
+SCRIPT_CREATE_SIM_SCRIPTS	:= ${DIR_SCRIPTS}/create_sim_scripts.bash
 
 FILE_PROJECT_CONFIG	:= ${DIR_PRJ_TOP}/project_config.json
 FILE_READ_JSON_VAR	:= ${DIR_SCRIPTS}/get_json_variable.py
+
+##############################
+# TOOL SETTINGS
+##############################
+
+SHELL			:= bash
+
+XIL_TOOL 		:= vivado
+XIL_PRJ_NAME	:= my_prj
+DIR_XIL_PRJ		:= ${DIR_PRJ_TOP}_vivado_prj
+XIL_PRJ			:= ${DIR_XIL_PRJ}/${XIL_PRJ_NAME}.xpr
+DIR_XIL_PRJ_XIPS	:= ${DIR_XIL_PRJ}/${XIL_PRJ_NAME}.srcs/sources_1/ip
+
+fun_get_prj_config_var	= $(shell python3 ${FILE_READ_JSON_VAR} ${FILE_PROJECT_CONFIG} $(1) )
 
 ##############################
 # PROJECT
@@ -30,21 +48,36 @@ FILE_READ_JSON_VAR	:= ${DIR_SCRIPTS}/get_json_variable.py
 
 # select the simulation flow to be used:
 # "verilator", "modelsim", "questasim"
-SIMULATOR		:= $(shell python3 										\
-				   ${FILE_READ_JSON_VAR} ${FILE_PROJECT_CONFIG} simulator)
-SIM_TOP         := $(shell python3 										\
-				   ${FILE_READ_JSON_VAR} ${FILE_PROJECT_CONFIG} sim_top)
+SIMULATOR		:= $(call fun_get_prj_config_var,simulator)
+SIM_TOP			:= $(call fun_get_prj_config_var,sim_top)
+
+# (can't be specified on top with the other scripts, because we need SIMULATOR 
+# first)
+SCRIPT_RUN_SIM				:= ${DIR_SIM}/${SIMULATOR}/run_sim.do
+SCRIPT_PREPARE_SIM			:= ${DIR_SIM}/${SIMULATOR}/prepare_sim.sh
+SCRIPT_OPT_SIM				:= ${DIR_SIM}/${SIMULATOR}/opt_sim.sh
 
 ##############################
 # RTL SOURCES
 ##############################
 
-SRC_RTL_SV		:= $(wildcard ${DIR_PRJ_TOP}/rtl/*.sv)
-SRC_RTL_V		:= $(wildcard ${DIR_PRJ_TOP}/rtl/*.v)
-SRC_RTL_VLOG	:= ${SRC_RTL_SV} ${SRC_RTL_V}
-SRC_RTL_VHDL	:= $(wildcard ${DIR_PRJ_TOP}/rtl/*.vhd)
+SRC_RTL_SV_ALL		:= $(wildcard ${DIR_RTL}/*.sv)
+SRC_RTL_SV_IF		:= $(wildcard ${DIR_RTL}/ifc_*.sv)
+SRC_RTL_SV_PKG		:= $(wildcard ${DIR_RTL}/*_pkg.sv)
+SRC_RTL_SV_MODULES	:= $(filter-out ${SRC_RTL_SV_IF} ${SRC_RTL_SV_PKG},${SRC_RTL_SV_ALL})
+SRC_RTL_V_ALL		:= $(wildcard ${DIR_RTL}/*.v)
+SRC_RTL_VLOG		:= ${SRC_RTL_SV_ALL} ${SRC_RTL_V_ALL}
+SRC_RTL_VHDL		:= $(wildcard ${DIR_RTL}/*.vhd)
 
-SRC_RTL         := ${SRC_RTL_VLOG} ${SRC_RTL_VHDL}
+SRC_RTL				:= ${SRC_RTL_VLOG} ${SRC_RTL_VHDL}
+
+SRC_TB_SV_ALL		:= $(wildcard ${DIR_TB}/*.sv)
+SRC_TB_SV_ALL		:= $(wildcard ${DIR_TB}/*/*.sv)
+SRC_TB_SV_IF		:= $(wildcard ${DIR_TB}/ifc_*.sv)
+SRC_TB_SV_IF		+= $(wildcard ${DIR_TB}/*/ifc_*.sv)
+SRC_TB_SV_PKG		:= $(wildcard ${DIR_TB}/*_pkg.sv)
+SRC_TB_SV_PKG		+= $(wildcard ${DIR_TB}/*/*_pkg.sv)
+SRC_TB_SV_MODULES	:= $(filter-out ${SRC_TB_SV_IF} ${SRC_TB_SV_PKG},${SRC_TB_SV_ALL})
 
 # how to get the names of all defined modules?
 # - we need to remove everything but the module name from the list of sources
@@ -57,6 +90,12 @@ SRC_RTL         := ${SRC_RTL_VLOG} ${SRC_RTL_VHDL}
 SRC_MODULES     := $(filter-out %_pkg %_if, $(basename $(notdir ${SRC_RTL})))
 XIL_DEBUG_CORE_FILES := $(addsuffix .tcl,                                   \
                             $(addprefix ${DIR_XIPS}/xips_debug_cores_,${SRC_MODULES}))
+
+# how to get the file names of all module-files (meaning all module file names 
+# that don't have _if or _pkg in them? We can't first strip the file ending as 
+# above, because then we don't know anymore what the file ending was.
+fun_filter_within_str = $(foreach v,$2,$(if $(findstring $1,$v),,$v))
+SRC_MODULE_FILES := $(call fun_filter_within_str,_pkg,${SRC_RTL})
 
 # SRC_RTL_HLS		:= $(wildcard ${DIR_PRJ_TOP}/hls/*/verilog/*.v)
 
@@ -71,9 +110,8 @@ SRC_SIM_CPP_INCL	:= ${DIR_PRJ_TOP}/tb
 # SRC_SIM_SYSC	:= 	$(wildcard ${DIR_PRJ_TOP}/tb/sysc_axi/*.cpp) \
 # 					$(wildcard ${DIR_PRJ_TOP}/sw/*.cpp)
 
-##############################
-# TOOL SETTINGS
-##############################
+SIM_ARGS			:= $(call fun_get_prj_config_var,sim_args_${SIMULATOR})
+SIM_VERBOSITY		:= $(call fun_get_prj_config_var,sim_verbosity)
 
 # TODO: once that is needed (should it ever be needed), integrate 
 # hls_export_lang into project_config.json and fetch it from there
@@ -88,5 +126,30 @@ SRC_SIM_CPP_INCL	:= ${DIR_PRJ_TOP}/tb
 # HLS_EXPORT_LANG_SUFFIX	:= vhd
 # endif
 # endif
+
+##############################
+# IP SOURCES
+##############################
+
+# TODO: this way, LIST_XIPS will also contain old IPs which are not present in 
+# the project anymore. I mean, in that case they also shouldn't really be in the 
+# vivado directory anymore, so the fix is much more that at any update, you 
+# remove the sources for the IPs that are not needed anymore
+LIST_XIPS				:= $(shell ls ${DIR_XIL_PRJ_XIPS})
+LIST_XIPS_XCI			:= $(wildcard ${DIR_XIL_PRJ_XIPS}/*/*.xci)
+DIR_XIPS_SIM_OUT		:= ${DIR_SIM}/${SIMULATOR}/xip_sim_export
+# list of all xips with exported simulation scripts (this one is accurate as 
+# opposed to LIST_XIPS, because the directories that are present actually origin 
+# from the project (which gets cleaned before every export))
+# TODO: come up with something that causes this thing not to complain if the 
+# directory is not there, and instead just be empty
+LIST_XIPS_SIM			= $(shell ls ${DIR_XIPS_SIM_OUT})
+DIR_XIL_IP_PRECOMPILE	:= $(call fun_get_prj_config_var,xil_ip_precompile_path)/${SIMULATOR}
+
+##############################
+# OTHERS
+##############################
+
+MAKE_DUMMY_SIM_RTL_COMP_SUCCESS	:= ${SIMULATOR}/.rtl_compilation_successful
 
 # vim: filetype=make

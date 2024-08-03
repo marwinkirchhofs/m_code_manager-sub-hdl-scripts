@@ -2,6 +2,61 @@
 
 include ../var.make
 
+# TODO: handle if the modelsim waveform doesn't exist: fetch the commands to 
+# open and name the file from modelsim - check if the wave does exist, if not, 
+# create a second modelsim script that creates the waveform file and stores it 
+# under the correct name (currently, you have to do that manually)
+# TODO: most if the IP simulation export targets depend on that all xilinx IPs 
+# are named xip_*. Two options:
+# 	* Make that transparent to the user to be a requirement
+# 	* remove that requirement and see if that would break anything, or if the 
+# 	respective lists and directories are guaranteed to be clean anyways
+# TODO: highly likely that the modelsim flow as it is will fail once you have 
+# a xilinx primitive in the RTL code. Figure out how to link to the libraries 
+# for that, for example check it with a clock buffer - but it should already get 
+# you most of the way to just copy modelsim.ini from the precompile directory 
+# before the vmaps - then it's only about how vsim knows that the primitives are 
+# in those libs -> the -L's
+# TODO: blacklist certain xilinx IPs that don't work with the flow, and why.  
+# The IPs should remain usable in xsim, if you desperately need the sim. So 
+# I guess the call would be to not change anything about the export, but then 
+# during simulation preparation, just ignore the directory. (I mean, you could 
+# also remove it, but that feels inconsistent with the fact that this is an 
+# untouched xilinx-generated directory tree, ignoring is more logical to me)
+#   * axi vip -> uses constrained randomization, thus you need some paid-license 
+#   simulator
+#   * axi protocol checker -> it redefines the precompiled smartconnect_v1_0 
+#   library. An idea was to rename everything in the generated files to 
+#   ssmartconnect, such that there is literally no connection left to the 
+#   original smartconnect_v1_0, doesn't work.
+#   	* If you don't rename:
+#   ** Error: (vsim-13) Recompile 
+#   xip_axi_protocol_checker_axi_protocol_checker_v2_0_5.axi_protocol_checker_v2_0_5_threadcam 
+#   because smartconnect_v1_0.sc_util_v1_0_4_pkg has changed.
+#   	* If you rename:
+#   	fails to find library ssmartconnect_v1_0 because of no such file or 
+#   	directory. The only idea I have why that is: If you inspect the 
+#   	generated compile.do file for the IP, you see that internally other 
+#   	libraries refer to (s)smartconnect_v1_0. But when I include the 
+#   	libraries in the top level, I remap all of them to unique names because 
+#   	otherwise I get ambiguities and crashes with especially xil_defaultlib 
+#   	and xilinx_vip (because more or less every IP defines them). Therefore 
+#   	at top level there is no ssmartconnect_v1_0 (only with prefix), and 
+#   	I guess at that point the internal links break. Don't know yet how to 
+#   	fix that.
+#   		* You could look for unique library names in the generated IPs and 
+#   		don't rename those. But first, I don't know if that fixes anything, 
+#   		and second, in that case everyone else using the original 
+#   		smartconnect_v1_0 would be redirected and probably run into 
+#   		problems.
+#   			* So you would not only have to check for duplicates, but also 
+#   			for for redefining of existing precompiled libraries
+# TODO: think about a "backup third-party sim" option (which you could activate 
+# in the project_config): invoke the third party simulation for the top module 
+# entirely via vivado, so basically open the project in vivado and from there 
+# run a third-party simulator.
+
+
 ############################################################
 # VARIABLES
 ############################################################
@@ -20,6 +75,15 @@ DIR_VL_OBJ		:= vl_out
 ##############################
 # OPTIONS
 ##############################
+
+# QUESTA/MODELSIM
+VLOG_SIM_DEFINE		:= +define+SIM_FILE_DIR=\"${DIR_SIM_MEM_FILES}\"
+VLOG_INC_DIR		:= +incdir+${DIR_SIM_MEM_FILES}
+VLOG_OPTS			:= +define+VERBOSITY=${SIM_VERBOSITY} 	\
+					   		${VLOG_SIM_DEFINE}				\
+							${VLOG_INC_DIR}
+VSIM_LIB_WORK		:= ${DIR_SIM}/${SIMULATOR}/work
+VSIM_WAVE_FILE		:= ${DIR_SIM}/wave/${SIMULATOR}/wave_${SIM_TOP}.do
 
 # VERILATOR
 
@@ -82,7 +146,7 @@ GTKW_OPTIONS	:= --saveonexit --output /dev/null
 
 .PHONY: vl_lint
 vl_lint:
-	verilator ${VL_LINT_OPTIONS} ${vl_opts} ${SRC_RTL_VLOG}
+	verilator ${VL_LINT_OPTIONS} ${opts} ${SRC_RTL_VLOG}
 
 ##############################
 # SIMULATION
@@ -91,27 +155,256 @@ vl_lint:
 .PHONY: sim
 sim: ${SIMULATOR}_sim
 
+.PHONY: sim_gui
+sim_gui:	${SIMULATOR}_sim_gui
+
+.PHONY: compile
+compile:	${SIMULATOR}_compile
+
+.PHONY: rtl_compile
+rtl_compile:	${SIMULATOR}_rtl_compile
+
 # VERILATOR
 
-.PHONY: vl_start_gui
-vl_start_gui:
+.PHONY: verilator_start_gui
+verilator_start_gui:
 	# execute gtkwave in separate shell so that it can run in the background and 
 	# you can still use the terminal you invoked it from
 	@bash -c "gtkwave ${GTKW_OPTIONS} ${FILE_TRACE} ${FILE_GTKW_SAVE} &"
-
-# verilator_sim is needed as an alias to vl_sim to allow invoking verilator 
-# simulation in both "expected" ways:
-# - `make sim` with the simulator set to 'verilator' in project_config.json
-# - `make vl_sim` because we are lazy with typing
-.PHONY: vl_sim
-vl_sim:	verilator_sim
 
 .PHONY: verilator_sim
 verilator_sim: vl_build
 	@mkdir -p ${DIR_TRACE}
 	./${DIR_VL_OBJ}/V${SIM_TOP}
 
-.PHONY: vl_build
-vl_build:
+.PHONY: verilator_build
+verilator_build:
 	verilator ${VL_OPTIONS} ${DIR_PRJ_TOP}tb/tb_vl_${SIM_TOP}.cpp \
 							${SRC_SIM_SYSC} ${SRC_RTL_VLOG}
+
+# QUESTA
+.PHONY: questa_sim_gui
+questa_sim_gui:	${SIMULATOR}/modelsim.ini ${SCRIPT_RUN_SIM}
+	cd ${SIMULATOR} && vsim -do "do ${SCRIPT_RUN_SIM}; do ${VSIM_WAVE_FILE}; run -all"
+
+# TODO: (currently) the only problem left is that ${SIMULATOR}/modelsim.ini 
+# still gets executed even if it doesn't have to. Figure out why and find a way 
+# to avoid it
+.PHONY: questa_sim
+questa_sim:	questa_compile
+	cd ${SIMULATOR} && vsim -c -do "do ${SCRIPT_RUN_SIM}; run -all; exit"
+
+# TODO: maybe there was a reason this was a PHONY target. I just don't want it 
+# to be that one because it's a prerequisite to ${SIMULATOR}/modelsim.ini, and 
+# I don't want that one to be re-generated every time
+# .PHONY: questa_compile
+questa_compile:	${SIMULATOR}/modelsim.ini ${SCRIPT_RUN_SIM}
+	cd ${SIMULATOR} && source ${SCRIPT_OPT_SIM}
+
+# shortcut target
+questa_rtl_compile:	${VSIM_LIB_WORK}
+
+# MODELSIM/QUESTA
+#
+# TODO: put all of these comments somewhere else than in the makefile (probably 
+# in the wiki)
+#
+# explanation for the vsim flow
+# * everything goes into the 'modelsim' subdiretory (separate artifacts from 
+# different simulators)
+# * handle (and compile) user RTL and Xilinx IPs separately from each other
+# * create a vsim execution script ${SCRIPT_RUN_SIM} that loads all the 
+# libraries from the different compilations
+#
+# compiling xilinx IPs
+# * step 1: generate the IP simulation export (xip_export_sim)
+# 	* in order to not clutter the project, we export into 
+# 	sim/modelsim/xip_sim_export
+# 	* the target depends on the .xci files in the vivado project sources 
+# 	directory -> that's better than depending on the IP-describing tcl files, 
+# 	because if you create IP in the project and not via the tcl files, the flow 
+# 	otherwise would not see that (would still compile, but the dependency would 
+# 	not be there, so it would not update although you created IP sources)
+# 	* the actual target is the export directory, not 'xip_export_sim' -> the 
+# 	make target kills the entire directory before invoking vivado, so the 
+# 	directory itself will be written every time a .xci file is touched
+# step 2: compile the xilinx IPs
+# 	* the idea is: compile them exactly the way that xilinx intended, namely 
+# 	within their generated export directories. That also means you compile 
+# 	per-IP
+# 	* in the directories, instead of invoking the compile.do, invoke the 
+# 	simulation shell script. It doesn't really run any simulation, so it barely 
+# 	costs extra time, but it sets up the modelsim_lib directory in the export 
+# 	directory (which compile.do compiles into) and it copies modelsim.ini from 
+# 	the precompiled xilinx IP libs, such that modelsim can bind those during 
+# 	compilation. It should be better to let the Xilinx script do it, no hacking 
+# 	around, if with other IPs more stuff happens, their script can take care of 
+# 	that, and you just let them compile sandbox-style and fetch the result
+# 	* the xilinx scripts actually create two modelsim libs during compilation: 
+# 	xil_defaultlib and work (at least the IPs that I have seen thus far...).  
+# 	work however appears to always be empty and would just act as the default 
+# 	modelsim lib to be present, but the IP seems to go into xil_defaultlib
+# 	* the only downside for large projects: if any xilinx IP is touched or added, 
+# 	all of them get re-compiled.  Normally, you don't touch them constantly, so 
+# 	it maybe it won't be too much of an issue. If it becomes an issue, you have 
+# 	to resort to exporting the IPs separately, which would mean having every IP 
+# 	sim export directory depend on the respective .xci (and also make sure that 
+# 	new IPs are recognized). Would mean an update to the generate_xips.tcl 
+# 	script, because currently that's the funnel that just processes all IPs in 
+# 	the vivado project at once.
+# step 3: bind the libraries
+#   * create ${SCRIPT_RUN_SIM} (modelsim/run_sim.do) - the script invokes 
+#   modelsim, (hopefully) loads the xil_defaultlib for every IP by specifying 
+#   `-Ldir ... -L xil_defaultlib`, then adds xil_defaultlib.glbl if there are 
+#   any IPs involved (glbl is some constant xilinx module that you just need for 
+#   modelsim integration apparently, but it is the same for every IP, it just 
+#   needs to be there once), and then passes the top level simulation testbench
+#   	* additional args can be passed via project_config.json -> 
+#   	sim_args_modelsim
+#	* note: check this once you have actual IPs doing something in the project.  
+#	It's possible that it doesn't work to include a bunch of equally named 
+#	xil_defaultlib libraries, although they are at different locations. If that 
+#	turns out to be the case, you'll probably have to sed all the xilinx 
+#	compile.do scripts to rename xil_defaultlib to the respective IP core.
+#
+# user RTL is standard-compiled into work, which is located in the 'modelsim' 
+# subdirectory
+#
+# target dependencies:
+# compile -> vsim run script |-> user RTL lib
+#                            |-> modelsim_xip_compile
+
+.PHONY: modelsim_sim_gui
+modelsim_sim_gui:	${SIMULATOR}/modelsim.ini ${SCRIPT_RUN_SIM}
+	cd ${SIMULATOR} && vsim -do "do ${SCRIPT_RUN_SIM}; do ${VSIM_WAVE_FILE}; run -all"
+
+# TODO: (currently) the only problem left is that ${SIMULATOR}/modelsim.ini 
+# still gets executed even if it doesn't have to. Figure out why and find a way 
+# to avoid it
+.PHONY: modelsim_sim
+modelsim_sim:	modelsim_compile
+	cd ${SIMULATOR} && vsim -c -do "do ${SCRIPT_RUN_SIM}; run -all; exit"
+
+# TODO: maybe there was a reason this was a PHONY target. I just don't want it 
+# to be that one because it's a prerequisite to ${SIMULATOR}/modelsim.ini, and 
+# I don't want that one to be re-generated every time
+# .PHONY: modelsim_compile
+modelsim_compile:	${SIMULATOR}/modelsim.ini ${SCRIPT_RUN_SIM}
+
+# shortcut target
+modelsim_rtl_compile:	${VSIM_LIB_WORK}
+
+${SIMULATOR}/modelsim.ini: ${SCRIPT_PREPARE_SIM}
+	cd ${SIMULATOR} && source ${SCRIPT_PREPARE_SIM}
+
+${SCRIPT_RUN_SIM}: ${SCRIPT_PREPARE_SIM}
+
+# TODO: account for that you now have two scripts
+${SCRIPT_PREPARE_SIM}:	${VSIM_LIB_WORK} ${SIMULATOR}_xip_export_compile ${FILE_PROJECT_CONFIG}
+	@source ${SCRIPT_CREATE_SIM_SCRIPTS}		\
+			${SIMULATOR}						\
+			${SCRIPT_RUN_SIM}					\
+			${SCRIPT_PREPARE_SIM}				\
+			${SCRIPT_OPT_SIM}					\
+			tb_${SIM_TOP}						\
+			${DIR_XIPS_SIM_OUT}					\
+			${DIR_XIL_IP_PRECOMPILE}			\
+			"${SIM_ARGS}"
+	@echo "Simulation run script ${SCRIPT_RUN_SIM} successfully created"
+
+${VSIM_LIB_WORK}:	${MAKE_DUMMY_SIM_RTL_COMP_SUCCESS} ${SRC_RTL_VLOG} \
+					${SRC_TB_SV_ALL} ${FILE_PROJECT_CONFIG}
+
+# dummy target file for successful full compilation because the work library 
+# directory is also there after a non-successful compilation. You don't really 
+# want to remove it again in that case, to not disable incremental compilation
+#
+# empty trailing strings at the end of the rules catch empty file sets - with no 
+# argument at all vlog fails, if the file list itself is enclosed as a string 
+# vlog treats lists of multiple paths as one file path (despite non-escaped 
+# white spaces...)
+${MAKE_DUMMY_SIM_RTL_COMP_SUCCESS}: ${SRC_RTL_VLOG} ${SRC_TB_SV_ALL} ${FILE_PROJECT_CONFIG}
+	@mkdir -p ${SIMULATOR} && cd ${SIMULATOR} && vlib work
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_RTL_SV_IF} ""
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_RTL_SV_PKG} ""
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work ${SRC_RTL_V_ALL} ""
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_RTL_SV_MODULES} ""
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_IF} ""
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_PKG} ""
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_MODULES} ""
+	@touch $@
+
+# yes, it is ugly and probably bad practice to invoke nested makes, because 
+# effectively here ${DIR_XIPS_SIM_OUT} and modelsim_xip_compile are both 
+# prerequisites. The two problems: 1. the order is absolutely crucial, because 
+# compile doesn't make sense before exporting. So far no problem, but 2. before 
+# exporting, ${LIST_XIPS_SIM} is empty, which is basically the list of 
+# subtargets for modelsim_xip_compile. Therefore you don't know what exactly 
+# modelsim_xip_compile consists of before the export, meaning you would have to 
+# define the export as prerequisite to targets which you can't express the name 
+# of yet (with or without variables), and I don't know of another way to make 
+# that work.
+.PHONY: ${SIMULATOR}_xip_export_compile
+${SIMULATOR}_xip_export_compile:	${DIR_XIPS_SIM_OUT}
+	@make ${SIMULATOR}_xip_compile
+
+# main entry target to run compilation for all SIMULATION-EXPORTED xilinx IPs
+${SIMULATOR}_xip_compile:	$(addsuffix _compile,$(addprefix ${SIMULATOR}_,${LIST_XIPS_SIM}))
+
+# (doesn't look like that, but in practice the pattern rule evaluates into the 
+# prerequisites of modelsim_xip_compile)
+# bash nop inserted in order for make to detect the rule. Empty rule gets not 
+# detected, maybe because of something in the backend of how pattern rules are 
+# processed, I might be in the mood to check that out another day.
+${SIMULATOR}_xip_%_compile:		${DIR_XIPS_SIM_OUT}/xip_%/${SIMULATOR}/${SIMULATOR}_lib
+	@:
+
+# depending on the modelsim_lib directory should work, because this directory 
+# only needs to be updated if any of the IP sources changed (the IP RTL gets 
+# included during compilation). But if that is the case, the entire parent 
+# directory ${DIR_XIPS_SIM_OUT} gets recreated, meaning there is no modelsim_lib 
+# directory after all, and this target should get executed. In other words: 
+# whenever */modelsim_lib exists, there should be nothing to do.
+#
+# indicates that "dummy" post-compile simulation was unsuccessful by creating 
+# the file "simulation_failed" in the IPs directory.
+# Reason: It is possible for an IP to compile correctly, but then fail in 
+# simulation because for instance there are no licenses available for 
+# a simulation feature in the IP. In that case, the entire target would fail if 
+# there wasn't an "catch block" ('|| touch simulation_failed') in the rule, 
+# causing make to abort and all the remaining IPs to not be compiled. But it is 
+# possible that the failing IP is not used in simulation at all, so the fail 
+# doesn't matter. Therefore the important thing is that compilation of the other 
+# IPs is not affected. Later on, when generating ${SCRIPT_RUN_SIM}, you can 
+# check the "simulation_failed" file before including the libs of that 
+# particular IP, such that you don't include potentially breaking stuff that you 
+# can't use in simulation anyway.
+${DIR_XIPS_SIM_OUT}/xip_%/${SIMULATOR}/${SIMULATOR}_lib:
+	cd $(dir $@) && source xip_$*.sh || touch simulation_failed
+	[[ -d $@/msim/xil_defaultlib/xip_$*_opt ]] && rm -rd $@/msim/xil_defaultlib/xip_$*_opt
+	cp $(dir $@)/*.mem ${SIMULATOR}
+
+.PHONY: xip_export_sim
+xip_export_sim:	${DIR_XIPS_SIM_OUT}
+
+${DIR_XIPS_SIM_OUT}:	${LIST_XIPS_XCI}
+	@[[ -d "${DIR_XIPS_SIM_OUT}" ]] && rm -rd ${DIR_XIPS_SIM_OUT} || :
+	${XIL_TOOL} -mode batch -source ${DIR_SCRIPTS}/generate_xips.tcl ${XIL_PRJ} \
+					-tclargs export_sim ${SIMULATOR} ${DIR_XIPS_SIM_OUT}
+	@touch $@
+
+.PHONY: debug
+debug:	
+	@mkdir ${DIR_SIM_MEM_FILES}
+
+# sidenotes:
+# * a few of the variables and targets will make no sense if the simulator 
+# doesn't match the target it is written for (for example, VSIM_LIB_WORK is 
+# derived from ${SIMULATOR}, but it might be meaningless if the SIMULATOR is any 
+# other than modelsim or questasim). However, also these variables should only 
+# be occurring in targets that won't matter if a the simulator is one that 
+# doesn't comply with how the variable is derived. Thus, it shouldn't be 
+# a problem, just a good one to keep in mind when reading the file again in two 
+# years.
+
+# vim: ft=make

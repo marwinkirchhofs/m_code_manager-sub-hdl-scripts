@@ -5,5 +5,7 @@
     "top": null,
     "sim_top": null,
     "simulator": "xsim",
-    "hw_version": "latest"
+    "hw_version": "latest",
+    "vio_top": "",
+    "xil_ip_precompile_path": ""
 }
