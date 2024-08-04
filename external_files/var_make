@@ -144,7 +144,7 @@ SIM_VERBOSITY		:= $(call fun_get_prj_config_var,sim_verbosity)
 # the project anymore. I mean, in that case they also shouldn't really be in the 
 # vivado directory anymore, so the fix is much more that at any update, you 
 # remove the sources for the IPs that are not needed anymore
-LIST_XIPS				:= $(shell ls ${DIR_XIL_PRJ_XIPS})
+LIST_XIPS				:= $(shell ls ${DIR_XIL_PRJ_XIPS} 2>/dev/null)
 LIST_XIPS_XCI			:= $(wildcard ${DIR_XIL_PRJ_XIPS}/*/*.xci)
 DIR_XIPS_SIM_OUT		:= ${DIR_SIM}/${SIMULATOR}/xip_sim_export
 # list of all xips with exported simulation scripts (this one is accurate as 
@@ -152,7 +152,7 @@ DIR_XIPS_SIM_OUT		:= ${DIR_SIM}/${SIMULATOR}/xip_sim_export
 # from the project (which gets cleaned before every export))
 # TODO: come up with something that causes this thing not to complain if the 
 # directory is not there, and instead just be empty
-LIST_XIPS_SIM			= $(shell ls ${DIR_XIPS_SIM_OUT})
+LIST_XIPS_SIM			= $(shell ls ${DIR_XIPS_SIM_OUT} 2> /dev/null)
 DIR_XIL_IP_PRECOMPILE	:= $(call fun_get_prj_config_var,xil_ip_precompile_path)/${SIMULATOR}
 
 ##############################
