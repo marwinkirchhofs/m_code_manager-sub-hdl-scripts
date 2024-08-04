@@ -295,7 +295,7 @@ modelsim_compile:	${SIMULATOR}/modelsim.ini ${SCRIPT_RUN_SIM}
 modelsim_rtl_compile:	${VSIM_LIB_WORK}
 
 ${SIMULATOR}/modelsim.ini: ${SCRIPT_PREPARE_SIM}
-	cd ${SIMULATOR} && source ${SCRIPT_PREPARE_SIM}
+	cd ${SIMULATOR} && [[ -f ${SCRIPT_PREPARE_SIM} ]] && source ${SCRIPT_PREPARE_SIM} || :
 
 ${SCRIPT_RUN_SIM}: ${SCRIPT_PREPARE_SIM}
 
@@ -387,15 +387,23 @@ ${DIR_XIPS_SIM_OUT}/xip_%/${SIMULATOR}/${SIMULATOR}_lib:
 .PHONY: xip_export_sim
 xip_export_sim:	${DIR_XIPS_SIM_OUT}
 
+# TODO: before adding the mkdir, this fails if not using any xips, because then 
+# vivado doesn't create the directory, you're touching something that doesn't 
+# exist, and you end up with an empty file for what should have been 
+# a directory. Then later you ls on that, and instead of the desired empty 
+# output you get the file path back and you're screwed. -> make sure this fix 
+# still works when there are xips, like that vivado doesn't complain "oh if the 
+# directory already exists, I'm not doing anything over here"
 ${DIR_XIPS_SIM_OUT}:	${LIST_XIPS_XCI}
 	@[[ -d "${DIR_XIPS_SIM_OUT}" ]] && rm -rd ${DIR_XIPS_SIM_OUT} || :
-	${XIL_TOOL} -mode batch -source ${DIR_SCRIPTS}/generate_xips.tcl ${XIL_PRJ} \
+	@mkdir ${DIR_XIPS_SIM_OUT}
+	${XIL_TOOL} -mode batch -source ${SCRIPT_GENERATE_XIPS} ${XIL_PRJ} \
 					-tclargs export_sim ${SIMULATOR} ${DIR_XIPS_SIM_OUT}
 	@touch $@
 
 .PHONY: debug
 debug:	
-	@mkdir ${DIR_SIM_MEM_FILES}
+	@echo ${LIST_XIPS_SIM}
 
 # sidenotes:
 # * a few of the variables and targets will make no sense if the simulator 
