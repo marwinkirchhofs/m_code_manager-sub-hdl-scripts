@@ -4,6 +4,8 @@
 # All variables that are not globally needed are defined in the respective 
 # sub-makefiles
 
+FILE_USER_MK        := user.mk
+
 ##############################
 # DIRECTORY
 ##############################

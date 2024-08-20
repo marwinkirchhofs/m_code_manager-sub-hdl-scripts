@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+ifndef _MAKE_SIM_
+_MAKE_SIM_ := 1
+
 include ../var.mk
 
 # TODO: handle if the modelsim waveform doesn't exist: fetch the commands to 
@@ -414,5 +417,7 @@ debug:
 # doesn't comply with how the variable is derived. Thus, it shouldn't be 
 # a problem, just a good one to keep in mind when reading the file again in two 
 # years.
+
+endif
 
 # vim: ft=make
