@@ -12,6 +12,8 @@ echo "r - rename a hardware version"
 echo "l - list exported hardware builds"
 read action
 
+dir_build=build
+
 case $action in 
     'f')
         read -p "specify vivado run name to fetch (empty will fetch 'impl_1'): " hw_run
@@ -20,25 +22,25 @@ case $action in
         fi
         module_top=$(python3 scripts/get_json_variable.py project_config.json top)
         dir_hw_run="_vivado_prj/$(ls _vivado_prj | grep runs)/${hw_run}"
-        mkdir -p hw_export/latest
-        cp ${dir_hw_run}/${module_top}.{bit,ltx} hw_export/latest
+        mkdir -p ${dir_build}/latest
+        cp ${dir_hw_run}/${module_top}.{bit,ltx} ${dir_build}/latest
         file_sysdef=${dir_hw_run}/${module_top}.sysdef
         if [[ -f ${file_sysdef} ]]; then
-            cp ${file_sysdef} hw_export/latest
+            cp ${file_sysdef} ${dir_build}/latest
         fi
         ;;
     'e')
         read -p "specify the hardware build name: " hardware_version
-        mkdir hw_export/$hardware_version
-        cp hw_export/{latest/*,$hardware_version}
+        mkdir ${dir_build}/$hardware_version
+        cp ${dir_build}/{latest/*,$hardware_version}
         ;;
     'r')
         read -p "specify the hardware build to be renamed: " hardware_version_old
         read -p "specify the new name: " hardware_version_new
-        mv hw_export/{$hardware_version_old,$hardware_version_new}
+        mv ${dir_build}/{$hardware_version_old,$hardware_version_new}
         ;;
     'l')
-        ls hw_export
+        ls ${dir_build}
         ;;
     *)
         echo "Unsupported action '$action'"
