@@ -5,7 +5,7 @@
     },
     "var_make": {
         "destination": "",
-        "destination_name": "var.make"
+        "destination_name": "var.mk"
     },
     "project_config": {
         "destination": "",

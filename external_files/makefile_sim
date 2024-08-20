@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-include ../var.make
+include ../var.mk
 
 # TODO: handle if the modelsim waveform doesn't exist: fetch the commands to 
 # open and name the file from modelsim - check if the wave does exist, if not, 
