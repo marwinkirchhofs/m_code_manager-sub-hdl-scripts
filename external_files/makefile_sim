@@ -90,9 +90,10 @@ VSIM_WAVE_FILE		:= ${DIR_SIM}/wave/${SIMULATOR}/wave_${SIM_TOP}.do
 
 # VERILATOR
 
-VL_WARNING		:= -Wall -Wno-fatal
+VL_WARNING		:= -Wall -Wno-fatal -Wno-IMPORTSTAR
 # explicitly specify the top module
 VL_TOP			:= --top ${SIM_TOP}
+VL_TOP_LINT		:= --top-module ${HW_TOP}
 # enable automatic tracing
 VL_TRACE		:= --trace-fst --trace-depth 3 --trace-structs
 # switch between SystemC and Cpp
@@ -127,6 +128,7 @@ VL_OPTIONS		:= ${VL_WARNING} \
 
 VL_LINT_OPTIONS	:= ${VL_WARNING} \
 				   ${VL_IN_LANG} \
+				   ${VL_TOP_LINT} \
 				   --lint-only
 
 # GTKWAVE
@@ -147,8 +149,8 @@ GTKW_OPTIONS	:= --saveonexit --output /dev/null
 # the first place), one can specify these as a string in vl_opts:
 # make lint vl_opts="-Wno-STMTDLY -Wno-PINCONNECTEMPTY"
 
-.PHONY: vl_lint
-vl_lint:
+.PHONY: verilator_lint
+verilator_lint:
 	verilator ${VL_LINT_OPTIONS} ${opts} ${SRC_RTL_VLOG}
 
 ##############################

@@ -61,6 +61,7 @@ fun_get_prj_config_var	= $(shell python3 ${FILE_READ_JSON_VAR} ${FILE_PROJECT_CO
 # "verilator", "modelsim", "questasim"
 SIMULATOR		:= $(call fun_get_prj_config_var,simulator)
 SIM_TOP			:= $(call fun_get_prj_config_var,sim_top)
+HW_TOP			:= $(call fun_get_prj_config_var,top)
 
 # (can't be specified on top with the other scripts, because we need SIMULATOR 
 # first)
