@@ -73,12 +73,22 @@ SCRIPT_OPT_SIM				:= ${DIR_SIM}/${SIMULATOR}/opt_sim.sh
 ##############################
 
 SRC_RTL_SV_ALL		:= $(wildcard ${DIR_RTL}/*.sv)
+SRC_RTL_SV_ALL		+= $(wildcard ${DIR_RTL}/*/*.sv)
 SRC_RTL_SV_IF		:= $(wildcard ${DIR_RTL}/ifc_*.sv)
+SRC_RTL_SV_IF		+= $(wildcard ${DIR_RTL}/*/ifc_*.sv)
 SRC_RTL_SV_PKG		:= $(wildcard ${DIR_RTL}/*_pkg.sv)
+SRC_RTL_SV_PKG		+= $(wildcard ${DIR_RTL}/*/*_pkg.sv)
 SRC_RTL_SV_MODULES	:= $(filter-out ${SRC_RTL_SV_IF} ${SRC_RTL_SV_PKG},${SRC_RTL_SV_ALL})
 SRC_RTL_V_ALL		:= $(wildcard ${DIR_RTL}/*.v)
-SRC_RTL_VLOG		:= ${SRC_RTL_SV_ALL} ${SRC_RTL_V_ALL}
+SRC_RTL_V_ALL		+= $(wildcard ${DIR_RTL}/*/*.v)
+# specifically selecting in an attempt to follow compile order
+SRC_RTL_VLOG		:= \
+					   ${SRC_RTL_SV_IF} \
+					   ${SRC_RTL_SV_PKG} \
+					   ${SRC_RTL_V_ALL} \
+					   ${SRC_RTL_SV_MODULES}
 SRC_RTL_VHDL		:= $(wildcard ${DIR_RTL}/*.vhd)
+SRC_RTL_VHDL		+= $(wildcard ${DIR_RTL}/*/*.vhd)
 
 SRC_RTL				:= ${SRC_RTL_VLOG} ${SRC_RTL_VHDL}
 
