@@ -23,6 +23,7 @@ DIR_SIM         := ${DIR_PRJ_TOP}/sim
 DIR_TB			:= ${DIR_PRJ_TOP}/tb
 DIR_RTL         := ${DIR_PRJ_TOP}/rtl
 DIR_XIPS        := ${DIR_PRJ_TOP}/xips
+DIR_INCL		:= ${DIR_PRJ_TOP}/include
 
 SCRIPT_MANAGE_BUILDS		:= ${DIR_SCRIPTS}/manage_build_files.bash
 SCRIPT_CREATE_SIM_SCRIPTS	:= ${DIR_SCRIPTS}/create_sim_scripts.bash
@@ -72,6 +73,16 @@ SCRIPT_OPT_SIM				:= ${DIR_SIM}/${SIMULATOR}/opt_sim.sh
 ##############################
 # RTL SOURCES
 ##############################
+
+DIR_LIST_RTL_INCL	:= $(shell find ${DIR_RTL} -type d -name "include")
+DIR_LIST_RTL_INCL	+= ${DIR_INCL}
+
+SRC_RTL_INCL		:= $(wildcard ${DIR_INCL}/*.svh)
+SRC_RTL_INCL		+= $(wildcard ${DIR_INCL}/*.vh)
+SRC_RTL_INCL		+= $(wildcard ${DIR_RTL}/*.svh)
+SRC_RTL_INCL		+= $(wildcard ${DIR_RTL}/*.vh)
+SRC_RTL_INCL		+= $(wildcard ${DIR_RTL}/*/*.svh)
+SRC_RTL_INCL		+= $(wildcard ${DIR_RTL}/*/*.vh)
 
 SRC_RTL_SV_ALL		:= $(wildcard ${DIR_RTL}/*.sv)
 SRC_RTL_SV_ALL		+= $(wildcard ${DIR_RTL}/*/*.sv)
