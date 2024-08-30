@@ -1,4 +1,7 @@
 
+ifndef _VAR_MAKE_
+_VAR_MAKE_ := 1
+
 # global variables for the hierarchical make build/sim system
 # 
 # All variables that are not globally needed are defined in the respective 
@@ -22,7 +25,7 @@ DIR_SCRIPTS     := ${DIR_PRJ_TOP}/scripts
 DIR_SIM         := ${DIR_PRJ_TOP}/sim
 DIR_TB			:= ${DIR_PRJ_TOP}/tb
 DIR_RTL         := ${DIR_PRJ_TOP}/rtl
-DIR_XIPS        := ${DIR_PRJ_TOP}/xips
+# DIR_XIPS        := ${DIR_PRJ_TOP}/xips
 DIR_INCL		:= ${DIR_PRJ_TOP}/include
 
 SCRIPT_MANAGE_BUILDS		:= ${DIR_SCRIPTS}/manage_build_files.bash
@@ -37,14 +40,6 @@ FILE_READ_JSON_VAR	:= ${DIR_SCRIPTS}/get_json_variable.py
 
 SHELL			:= bash
 
-# TODO: this needs to go somewhere in the xilinx-respective scripts (maybe 
-# a make var there that gets included by this one?)
-XIL_TOOL 		:= vivado
-XIL_PRJ_NAME	:= ${PRJ_NAME}
-DIR_XIL_PRJ		:= ${DIR_PRJ_TOP}/_vivado_prj
-XIL_PRJ			:= ${DIR_XIL_PRJ}/${XIL_PRJ_NAME}.xpr
-
-DIR_XIL_PRJ_XIPS	:= ${DIR_XIL_PRJ}/${XIL_PRJ_NAME}.srcs/sources_1/ip
 
 # XIL_TOOL 		:= vivado
 # XIL_PRJ_NAME	:= my_prj
@@ -63,6 +58,7 @@ fun_get_prj_config_var	= $(shell python3 ${FILE_READ_JSON_VAR} ${FILE_PROJECT_CO
 SIMULATOR		:= $(call fun_get_prj_config_var,simulator)
 SIM_TOP			:= $(call fun_get_prj_config_var,sim_top)
 HW_TOP			:= $(call fun_get_prj_config_var,top)
+PROJECT_TYPE	:= $(call fun_get_prj_config_var,project_type)
 
 # (can't be specified on top with the other scripts, because we need SIMULATOR 
 # first)
@@ -121,8 +117,8 @@ SRC_TB_SV_MODULES	:= $(filter-out ${SRC_TB_SV_IF} ${SRC_TB_SV_PKG},${SRC_TB_SV_A
 # strip the file names first such that _pkg/_if is at the end of the remaining
 # string)
 SRC_MODULES     := $(filter-out %_pkg %_if, $(basename $(notdir ${SRC_RTL})))
-XIL_DEBUG_CORE_FILES := $(addsuffix .tcl,                                   \
-                            $(addprefix ${DIR_XIPS}/xips_debug_cores_,${SRC_MODULES}))
+# XIL_DEBUG_CORE_FILES := $(addsuffix .tcl,                                   \
+#                             $(addprefix ${DIR_XIPS}/xips_debug_cores_,${SRC_MODULES}))
 
 # how to get the file names of all module-files (meaning all module file names 
 # that don't have _if or _pkg in them? We can't first strip the file ending as 
@@ -160,29 +156,31 @@ SIM_VERBOSITY		:= $(call fun_get_prj_config_var,sim_verbosity)
 # endif
 # endif
 
-##############################
-# IP SOURCES
-##############################
-
-# TODO: this way, LIST_XIPS will also contain old IPs which are not present in 
-# the project anymore. I mean, in that case they also shouldn't really be in the 
-# vivado directory anymore, so the fix is much more that at any update, you 
-# remove the sources for the IPs that are not needed anymore
-LIST_XIPS				:= $(shell ls ${DIR_XIL_PRJ_XIPS} 2>/dev/null)
-LIST_XIPS_XCI			:= $(wildcard ${DIR_XIL_PRJ_XIPS}/*/*.xci)
-DIR_XIPS_SIM_OUT		:= ${DIR_SIM}/${SIMULATOR}/xip_sim_export
-# list of all xips with exported simulation scripts (this one is accurate as 
-# opposed to LIST_XIPS, because the directories that are present actually origin 
-# from the project (which gets cleaned before every export))
-# TODO: come up with something that causes this thing not to complain if the 
-# directory is not there, and instead just be empty
-LIST_XIPS_SIM			= $(shell ls ${DIR_XIPS_SIM_OUT} 2> /dev/null)
-DIR_XIL_IP_PRECOMPILE	:= $(call fun_get_prj_config_var,xil_ip_precompile_path)/${SIMULATOR}
+# ##############################
+# # IP SOURCES
+# ##############################
+# 
+# # TODO: this way, LIST_XIPS will also contain old IPs which are not present in 
+# # the project anymore. I mean, in that case they also shouldn't really be in the 
+# # vivado directory anymore, so the fix is much more that at any update, you 
+# # remove the sources for the IPs that are not needed anymore
+# LIST_XIPS				:= $(shell ls ${DIR_XIL_PRJ_XIPS} 2>/dev/null)
+# LIST_XIPS_XCI			:= $(wildcard ${DIR_XIL_PRJ_XIPS}/*/*.xci)
+# DIR_XIPS_SIM_OUT		:= ${DIR_SIM}/${SIMULATOR}/xip_sim_export
+# # list of all xips with exported simulation scripts (this one is accurate as 
+# # opposed to LIST_XIPS, because the directories that are present actually origin 
+# # from the project (which gets cleaned before every export))
+# # TODO: come up with something that causes this thing not to complain if the 
+# # directory is not there, and instead just be empty
+# LIST_XIPS_SIM			= $(shell ls ${DIR_XIPS_SIM_OUT} 2> /dev/null)
+# DIR_XIL_IP_PRECOMPILE	:= $(call fun_get_prj_config_var,xil_ip_precompile_path)/${SIMULATOR}
 
 ##############################
 # OTHERS
 ##############################
 
 MAKE_DUMMY_SIM_RTL_COMP_SUCCESS	:= ${SIMULATOR}/.rtl_compilation_successful
+
+endif
 
 # vim: filetype=make
