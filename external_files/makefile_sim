@@ -344,6 +344,7 @@ ${MAKE_DUMMY_SIM_RTL_COMP_SUCCESS}: ${SRC_RTL_VLOG} ${SRC_TB_SV_ALL} ${FILE_PROJ
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_RTL_SV_MODULES} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_IF} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_PKG} ""
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_AGENT} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_MODULES} ""
 	@touch $@
 

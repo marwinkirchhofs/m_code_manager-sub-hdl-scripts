@@ -101,12 +101,18 @@ SRC_RTL_VHDL		+= $(wildcard ${DIR_RTL}/*/*.vhd)
 SRC_RTL				:= ${SRC_RTL_VLOG} ${SRC_RTL_VHDL}
 
 SRC_TB_SV_ALL		:= $(wildcard ${DIR_TB}/*.sv)
-SRC_TB_SV_ALL		:= $(wildcard ${DIR_TB}/*/*.sv)
+SRC_TB_SV_ALL		+= $(wildcard ${DIR_TB}/*/*.sv)
+SRC_TB_SV_ALL		+= $(wildcard ${DIR_RTL}/*/tb/*.sv)
+SRC_TB_SV_AGENT		:= $(wildcard ${DIR_TB}/*/agent_*.sv)
+SRC_TB_SV_AGENT		+= $(wildcard ${DIR_RTL}/*/tb/agent_*.sv)
 SRC_TB_SV_IF		:= $(wildcard ${DIR_TB}/ifc_*.sv)
 SRC_TB_SV_IF		+= $(wildcard ${DIR_TB}/*/ifc_*.sv)
+SRC_TB_SV_IF		+= $(wildcard ${DIR_RTL}/*/tb/ifc_*.sv)
 SRC_TB_SV_PKG		:= $(wildcard ${DIR_TB}/*_pkg.sv)
 SRC_TB_SV_PKG		+= $(wildcard ${DIR_TB}/*/*_pkg.sv)
-SRC_TB_SV_MODULES	:= $(filter-out ${SRC_TB_SV_IF} ${SRC_TB_SV_PKG},${SRC_TB_SV_ALL})
+SRC_TB_SV_PKG		+= $(wildcard ${DIR_RTL}/*/tb/*_pkg.sv)
+SRC_TB_SV_MODULES	:= $(filter-out \
+					   ${SRC_TB_SV_IF} ${SRC_TB_SV_PKG} ${SRC_TB_SV_AGENT},${SRC_TB_SV_ALL})
 
 # how to get the names of all defined modules?
 # - we need to remove everything but the module name from the list of sources
