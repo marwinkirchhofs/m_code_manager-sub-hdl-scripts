@@ -59,6 +59,25 @@ case $simulator in
         [[ ! -z ${dir_xips_precompile} ]] && [[ -d ${dir_xips_precompile} ]] && \
                 echo "cp ${dir_xips_precompile}/modelsim.ini ." > $target_sim_prepare
 
+        # STANDARD LIBS
+        # xip-independent libs
+
+        if [[ ! -z ${dir_xips_precompile} ]]; then
+            # if there are precompiled xilinx IPs, make sure to always include 
+            # unisim - it provides the simulation models for primitives. Might 
+            # not always be necessary, but it hopefully doesn't hurt, and to 
+            # determine if you actually need them you would have to check the 
+            # source code, that's not viable.
+            case $simulator in
+                modelsim)
+                    echo "-L unisim \\" >> $target_sim_run
+                    ;;
+                questa)
+                    echo "-L unisim \\" >> $target_sim_opt
+                    ;;
+            esac
+        fi
+
         # remember that the makeflow compiles the glbl module into its own 
         # library (if any xips are present)
         if [[ ! -z "$list_xips" ]]; then
@@ -84,6 +103,13 @@ case $simulator in
                 for dir_lib in $list_dir_msim_libs; do
                     lib=$(basename $dir_lib)
                     top_level_lib_name="${xip}_${lib}"
+
+                    # prevent "unisim" from being added another time, it is 
+                    # already included by this script by default
+                    # TODO: check if you also need to do anything later on at 
+                    # the external libs thing
+                    [[ ${lib} == "unisim" ]] && continue;
+
                     echo "vmap ${top_level_lib_name} $dir_lib" >> $target_sim_prepare
                     case $simulator in
                         modelsim)
