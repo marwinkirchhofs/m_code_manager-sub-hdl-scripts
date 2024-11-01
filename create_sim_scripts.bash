@@ -53,7 +53,10 @@ case $simulator in
                 ;;
         esac
 
+        # PREPARE FILES
         [[ -f $target_sim_prepare ]] && rm $target_sim_prepare
+
+        # MODELSIM INI
         # copy modelsim.ini from precompiled simulation libraries (only if 
         # a directory is passed and it exists)
         [[ ! -z ${dir_xips_precompile} ]] && [[ -d ${dir_xips_precompile} ]] && \
@@ -91,6 +94,7 @@ case $simulator in
             esac
         fi
 
+        # XIP LIBS
         for xip in $list_xips; do
             dir_xip=$dir_xips_sim_out/$xip/$simulator
             # only include libs that were successfully built/can successfully be executed
@@ -141,7 +145,7 @@ case $simulator in
                 # directly vopt them with the IP-respective top so that you 
                 # don't get to the libraries anymore)
 
-                # we need to check libraries againts the single names (without 
+                # we need to check libraries against the single names (without 
                 # preceding path) of the already compiled libraries in the IP 
                 # directory -> if xil_defaultlib exists in the IP directory, you 
                 # already vmap that at top-level. elaborate.do still specifies 
