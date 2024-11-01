@@ -32,6 +32,7 @@ SCRIPT_MANAGE_BUILDS		:= ${DIR_SCRIPTS}/manage_build_files.bash
 SCRIPT_CREATE_SIM_SCRIPTS	:= ${DIR_SCRIPTS}/create_sim_scripts.bash
 
 FILE_PROJECT_CONFIG	:= ${DIR_PRJ_TOP}/project_config.json
+FILE_BUILD_CONFIG	:= ${DIR_PRJ_TOP}/build_config.json
 FILE_READ_JSON_VAR	:= ${DIR_SCRIPTS}/get_json_variable.py
 
 ##############################
@@ -48,6 +49,7 @@ SHELL			:= bash
 # DIR_XIL_PRJ_XIPS	:= ${DIR_XIL_PRJ}/${XIL_PRJ_NAME}.srcs/sources_1/ip
 
 fun_get_prj_config_var	= $(shell python3 ${FILE_READ_JSON_VAR} ${FILE_PROJECT_CONFIG} $(1) )
+fun_get_build_config_var	= $(shell python3 ${FILE_READ_JSON_VAR} ${FILE_BUILD_CONFIG} $(1) )
 
 ##############################
 # PROJECT
@@ -57,7 +59,7 @@ fun_get_prj_config_var	= $(shell python3 ${FILE_READ_JSON_VAR} ${FILE_PROJECT_CO
 # "verilator", "modelsim", "questasim"
 SIMULATOR		:= $(call fun_get_prj_config_var,simulator)
 SIM_TOP			:= $(call fun_get_prj_config_var,sim_top)
-HW_TOP			:= $(call fun_get_prj_config_var,top)
+HW_TOP			:= $(call fun_get_build_config_var,top)
 PROJECT_TYPE	:= $(call fun_get_prj_config_var,project_type)
 
 # (can't be specified on top with the other scripts, because we need SIMULATOR 
