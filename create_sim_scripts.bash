@@ -102,13 +102,26 @@ case $simulator in
 
                 for dir_lib in $list_dir_msim_libs; do
                     lib=$(basename $dir_lib)
-                    top_level_lib_name="${xip}_${lib}"
 
                     # prevent "unisim" from being added another time, it is 
                     # already included by this script by default
                     # TODO: check if you also need to do anything later on at 
                     # the external libs thing
                     [[ ${lib} == "unisim" ]] && continue;
+
+                    # TODO: Went back from ${xip}_${lib} because it's impossible 
+                    # in the general case to alter the lib name, because it's 
+                    # hard-coded if the IP simulation model is in vhdl. Also it 
+                    # has led to issues where questa would ask to "recompile" 
+                    # a lib that was just compiled. But now this might break if 
+                    # there are two different configurations present of the same 
+                    # IP, so presumably it's a temporary solution
+#                     top_level_lib_name="${xip}_${lib}"
+                    if [[ ! ${lib} == "xil_defaultlib" ]]; then
+                        top_level_lib_name="${lib}"
+                    else
+                        top_level_lib_name="${xip}_${lib}"
+                    fi
 
                     echo "vmap ${top_level_lib_name} $dir_lib" >> $target_sim_prepare
                     case $simulator in
