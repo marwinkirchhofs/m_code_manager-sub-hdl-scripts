@@ -27,6 +27,8 @@ DIR_TB			:= ${DIR_PRJ_TOP}/tb
 DIR_RTL         := ${DIR_PRJ_TOP}/rtl
 # DIR_XIPS        := ${DIR_PRJ_TOP}/xips
 DIR_INCL		:= ${DIR_PRJ_TOP}/include
+DIR_BUILD		:= ${DIR_PRJ_TOP}/build
+DIR_CONSTRAINTS	:= ${DIR_PRJ_TOP}/constraints
 
 SCRIPT_MANAGE_BUILDS		:= ${DIR_SCRIPTS}/manage_build_files.bash
 SCRIPT_CREATE_SIM_SCRIPTS	:= ${DIR_SCRIPTS}/create_sim_scripts.bash
