@@ -29,6 +29,8 @@ DIR_RTL         := ${DIR_PRJ_TOP}/rtl
 DIR_INCL		:= ${DIR_PRJ_TOP}/include
 DIR_BUILD		:= ${DIR_PRJ_TOP}/build
 DIR_CONSTRAINTS	:= ${DIR_PRJ_TOP}/constraints
+DIR_SW			:= ${DIR_PRJ_TOP}/sw
+DIR_SW_SRC		:= ${DIR_SW}/src
 
 SCRIPT_MANAGE_BUILDS		:= ${DIR_SCRIPTS}/manage_build_files.bash
 SCRIPT_CREATE_SIM_SCRIPTS	:= ${DIR_SCRIPTS}/create_sim_scripts.bash
@@ -117,6 +119,11 @@ SRC_TB_SV_PKG		+= $(wildcard ${DIR_TB}/*/*_pkg.sv)
 SRC_TB_SV_PKG		+= $(wildcard ${DIR_RTL}/*/tb/*_pkg.sv)
 SRC_TB_SV_MODULES	:= $(filter-out \
 					   ${SRC_TB_SV_IF} ${SRC_TB_SV_PKG} ${SRC_TB_SV_AGENT},${SRC_TB_SV_ALL})
+
+SRC_SW_C			:= $(wildcard ${DIR_SW_SRC}/*.c)
+SRC_SW_CPP			:= $(wildcard ${DIR_SW_SRC}/*.cpp)
+SRC_SW_H			:= $(wildcard ${DIR_SW_SRC}/*.h)
+SRC_SW_ALL			:= ${SRC_SW_C} ${SRC_SW_CPP} ${SRC_SW_H}
 
 # how to get the names of all defined modules?
 # - we need to remove everything but the module name from the list of sources
