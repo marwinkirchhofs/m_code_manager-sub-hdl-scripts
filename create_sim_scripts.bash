@@ -24,7 +24,8 @@ target_sim_opt=$4
 sim_top=$5
 dir_xips_sim_out=$6
 dir_xips_precompile=$7
-sim_args=$8
+xil_glbl_lib=$8
+sim_args=$9
 
 list_xips=$(ls $dir_xips_sim_out | grep xip_)
 
@@ -57,6 +58,20 @@ case $simulator in
         # a directory is passed and it exists)
         [[ ! -z ${dir_xips_precompile} ]] && [[ -d ${dir_xips_precompile} ]] && \
                 echo "cp ${dir_xips_precompile}/modelsim.ini ." > $target_sim_prepare
+
+        # remember that the makeflow compiles the glbl module into its own 
+        # library (if any xips are present)
+        if [[ ! -z "$list_xips" ]]; then
+            case $simulator in
+                modelsim)
+                    echo "-L $xil_glbl_lib \\" >> $target_sim_run
+                    ;;
+                questa)
+                    echo "-L $xil_glbl_lib \\" >> $target_sim_opt
+                    ;;
+            esac
+        fi
+
         for xip in $list_xips; do
             dir_xip=$dir_xips_sim_out/$xip/$simulator
             # only include libs that were successfully built/can successfully be executed
@@ -128,14 +143,14 @@ case $simulator in
                 # because it doesn't matter from which IP you take it. It's the 
                 # same everywhere, it only provides glbl)
                 [[ ! -z "$list_xips" ]] && \
-                        echo "${xip}_xil_defaultlib.glbl \\" >> $target_sim_run
+                        echo "${xil_glbl_lib}.glbl \\" >> $target_sim_run
                 echo "$sim_top" >> $target_sim_run
                 ;;
             questa)
                 echo "-lib work \\" >> $target_sim_run
                 echo "-work work \\" >> $target_sim_opt
                 [[ ! -z "$list_xips" ]] && \
-                        echo "${xip}_xil_defaultlib.glbl \\" >> $target_sim_opt
+                        echo "${xil_glbl_lib}.glbl \\" >> $target_sim_opt
                 echo "$sim_top \\" >> $target_sim_opt
                 echo "-o ${sim_top}_opt" >> $target_sim_opt
                 echo "${sim_top}_opt" >> $target_sim_run
