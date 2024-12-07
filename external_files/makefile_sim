@@ -87,6 +87,7 @@ FILE_MAKE_PROJECT_TYPE	:= ${PROJECT_TYPE}.mk
 
 # QUESTA/MODELSIM
 VLOG_SIM_DEFINE		:= +define+SIM_FILE_DIR=\"${DIR_SIM_MEM_FILES}\"
+VLOG_SIM_DEFINE		+= $(addprefix +define+,${SIM_DEFINE})
 VLOG_INC_DIR		:= +incdir+${DIR_SIM_MEM_FILES} \
 					   $(addprefix +incdir+,${DIR_LIST_RTL_INCL})
 VLOG_OPTS			:= +define+VERBOSITY=${SIM_VERBOSITY} 	\
@@ -428,7 +429,8 @@ ${PROJECT_TYPE}_${SIMULATOR}_compile:
 
 .PHONY: debug
 debug:	
-	@echo ${PROJECT_TYPE}
+	@echo ${SIM_DEFINE}
+	@echo ${VLOG_SIM_DEFINE}
 
 # sidenotes:
 # * a few of the variables and targets will make no sense if the simulator 

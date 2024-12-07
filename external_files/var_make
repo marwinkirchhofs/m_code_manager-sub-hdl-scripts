@@ -157,6 +157,7 @@ SRC_SIM_CPP_INCL	:= ${DIR_PRJ_TOP}/tb
 # 					$(wildcard ${DIR_PRJ_TOP}/sw/*.cpp)
 
 SIM_ARGS			:= $(call fun_get_prj_config_var,sim_args_${SIMULATOR})
+SIM_DEFINE			:= $(call fun_get_prj_config_var,sim_define)
 SIM_VERBOSITY		:= $(call fun_get_prj_config_var,sim_verbosity)
 
 # TODO: once that is needed (should it ever be needed), integrate 
