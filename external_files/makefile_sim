@@ -340,14 +340,22 @@ ${VSIM_LIB_WORK}:	${MAKE_DUMMY_SIM_RTL_COMP_SUCCESS} ${SRC_RTL_VLOG} \
 # white spaces...)
 ${MAKE_DUMMY_SIM_RTL_COMP_SUCCESS}: ${SRC_RTL_VLOG} ${SRC_TB_SV_ALL} ${FILE_PROJECT_CONFIG}
 	@mkdir -p ${SIMULATOR} && cd ${SIMULATOR} && vlib work
+ifneq ("${COMPILE_ORDER_RTL}", "")
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${COMPILE_ORDER_RTL} ""
+else
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_RTL_SV_IF} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_RTL_SV_PKG} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work ${SRC_RTL_V_ALL} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_RTL_SV_MODULES} ""
+endif
+ifneq ("${COMPILE_ORDER_TB}", "")
+	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${COMPILE_ORDER_TB} ""
+else
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_IF} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_PKG} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_AGENT} ""
 	vlog ${VLOG_OPTS} -work ${SIMULATOR}/work -sv ${SRC_TB_SV_MODULES} ""
+endif
 	@touch $@
 
 ##############################

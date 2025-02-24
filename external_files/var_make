@@ -125,6 +125,13 @@ SRC_SW_CPP			:= $(wildcard ${DIR_SW_SRC}/*.cpp)
 SRC_SW_H			:= $(wildcard ${DIR_SW_SRC}/*.h)
 SRC_SW_ALL			:= ${SRC_SW_C} ${SRC_SW_CPP} ${SRC_SW_H}
 
+FILE_COMPILE_ORDER_RTL	:= ${DIR_RTL}/compile_order
+FILE_COMPILE_ORDER_TB	:= ${DIR_TB}/compile_order
+COMPILE_ORDER_RTL	:= $(addprefix \
+		${DIR_RTL}/,$(shell [[ -f ${FILE_COMPILE_ORDER_RTL} ]] && cat ${FILE_COMPILE_ORDER_RTL}))
+COMPILE_ORDER_TB	:= $(addprefix \
+		${DIR_TB}/,$(shell [[ -f ${FILE_COMPILE_ORDER_TB} ]] && cat ${FILE_COMPILE_ORDER_TB}))
+
 # how to get the names of all defined modules?
 # - we need to remove everything but the module name from the list of sources
 #   -> basename (notdir ...)
