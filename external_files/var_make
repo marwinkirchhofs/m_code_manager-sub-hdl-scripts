@@ -123,7 +123,13 @@ SRC_TB_SV_MODULES	:= $(filter-out \
 SRC_SW_C			:= $(wildcard ${DIR_SW_SRC}/*.c)
 SRC_SW_CPP			:= $(wildcard ${DIR_SW_SRC}/*.cpp)
 SRC_SW_H			:= $(wildcard ${DIR_SW_SRC}/*.h)
-SRC_SW_ALL			:= ${SRC_SW_C} ${SRC_SW_CPP} ${SRC_SW_H}
+SRC_SW_C			+= $(wildcard ${DIR_SW_SRC}/*/*.c)
+SRC_SW_CPP			+= $(wildcard ${DIR_SW_SRC}/*/*.cpp)
+SRC_SW_H			+= $(wildcard ${DIR_SW_SRC}/*/*.h)
+SRC_SW_C			+= $(wildcard ${DIR_SW_SRC}/*/*/*.c)
+SRC_SW_CPP			+= $(wildcard ${DIR_SW_SRC}/*/*/*.cpp)
+SRC_SW_H			+= $(wildcard ${DIR_SW_SRC}/*/*/*.h)
+SRC_SW_ALL			+= ${SRC_SW_C} ${SRC_SW_CPP} ${SRC_SW_H}
 
 FILE_COMPILE_ORDER_RTL	:= ${DIR_RTL}/compile_order
 FILE_COMPILE_ORDER_TB	:= ${DIR_TB}/compile_order
