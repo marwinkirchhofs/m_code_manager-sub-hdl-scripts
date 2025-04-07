@@ -90,7 +90,8 @@ VLOG_SIM_DEFINE		:= +define+SIM_FILE_DIR=\"${DIR_SIM_MEM_FILES}\"
 VLOG_SIM_DEFINE		+= +define+SIM=1
 VLOG_SIM_DEFINE		+= $(addprefix +define+,${SIM_DEFINE})
 VLOG_INC_DIR		:= +incdir+${DIR_SIM_MEM_FILES} \
-					   $(addprefix +incdir+,${DIR_LIST_RTL_INCL})
+					   $(addprefix +incdir+,${DIR_LIST_RTL_INCL}) \
+					   $(addprefix +incdir+,${DIR_LIST_TB_INCL})
 VLOG_OPTS			:= +define+VERBOSITY=${SIM_VERBOSITY} 	\
 					   		${VLOG_SIM_DEFINE}				\
 							${VLOG_INC_DIR}
@@ -111,7 +112,8 @@ VL_OUT_LANG		:= -sc
 VL_IN_LANG		:= -sv
 # build exe and enable the maximum number of parallel jobs
 VL_ADD_OPTS		:= --build --exe -j
-VL_RTL_INCL		:= $(addprefix -I,${DIR_LIST_RTL_INCL})
+VL_RTL_INCL		:= $(addprefix -I,${DIR_LIST_RTL_INCL}) \
+				   $(addprefix -I,${DIR_LIST_TB_INCL})
 # additional cpp headers
 ifdef SRC_SIM_CPP_INCL
 VL_CPP_INCL		:= -CFLAGS "$(addprefix -I,${SRC_SIM_CPP_INCL})"

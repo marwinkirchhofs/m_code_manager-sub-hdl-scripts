@@ -106,6 +106,8 @@ SRC_RTL_VHDL		+= $(wildcard ${DIR_RTL}/*/*.vhd)
 
 SRC_RTL				:= ${SRC_RTL_VLOG} ${SRC_RTL_VHDL}
 
+DIR_LIST_TB_INCL	:= $(shell find ${DIR_TB} -type d -name "include")
+
 SRC_TB_SV_ALL		:= $(wildcard ${DIR_TB}/*.sv)
 SRC_TB_SV_ALL		+= $(wildcard ${DIR_TB}/*/*.sv)
 SRC_TB_SV_ALL		+= $(wildcard ${DIR_RTL}/*/tb/*.sv)
