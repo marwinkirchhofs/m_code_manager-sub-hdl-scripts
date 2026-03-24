@@ -31,6 +31,7 @@ DIR_BUILD		:= ${DIR_PRJ_TOP}/build
 DIR_CONSTRAINTS	:= ${DIR_PRJ_TOP}/constraints
 DIR_SW			:= ${DIR_PRJ_TOP}/sw
 DIR_SW_SRC		:= ${DIR_SW}/src
+DIR_SW_INCL		:= ${DIR_SW}/include
 
 SCRIPT_MANAGE_BUILDS		:= ${DIR_SCRIPTS}/manage_build_files.bash
 SCRIPT_CREATE_SIM_SCRIPTS	:= ${DIR_SCRIPTS}/create_sim_scripts.bash
@@ -131,6 +132,7 @@ SRC_SW_H			+= $(wildcard ${DIR_SW_SRC}/*/*.h)
 SRC_SW_C			+= $(wildcard ${DIR_SW_SRC}/*/*/*.c)
 SRC_SW_CPP			+= $(wildcard ${DIR_SW_SRC}/*/*/*.cpp)
 SRC_SW_H			+= $(wildcard ${DIR_SW_SRC}/*/*/*.h)
+SRC_SW_H			+= $(wildcard ${DIR_SW_INCL}/*.h)
 SRC_SW_ALL			+= ${SRC_SW_C} ${SRC_SW_CPP} ${SRC_SW_H}
 
 FILE_COMPILE_ORDER_RTL	:= ${DIR_RTL}/compile_order
